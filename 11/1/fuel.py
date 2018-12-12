@@ -17,23 +17,18 @@ def calculate_levels(serial):
 
 def calculate_squares(levels):
     squares = []
-    for x in range(1, 301):
-        for y in range(1, 301):
-            sizes = []
-            for size in range(1, 301-(max(x,y)-1)):
-                power = sum(levels[x1][y1]
-                                for x1 in range(x, x+size)
-                                for y1 in range(y, y+size))
-                sizes.append((power, size))
-            sizes.sort()
-            power, size = sizes[-1]
-            squares.append((power, (x,y,size)))
+    for x in range(1, 299):
+        for y in range(1, 299):
+            power = sum(levels[x1][y1]
+                            for x1 in range(x, x+3)
+                            for y1 in range(y, y+3))
+            squares.append((power, (x,y)))
     squares.sort()
     return squares
 
 def main():
     args = parse_args()
-    serial = int(args.input.read().strip())
+    serial = args.input
     levels = calculate_levels(serial)
     squares = calculate_squares(levels)
     print(squares[-1])
@@ -42,7 +37,7 @@ def main():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('input', type=argparse.FileType())
+    parser.add_argument('input', type=int)
     return parser.parse_args()
 
 
