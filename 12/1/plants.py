@@ -2,53 +2,58 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import copy
-import re
-from collections import defaultdict
 from pprint import pprint
 
 
-NUM_GENERATIONS = 20
-
-
 class System(object):
+    NUM_GENERATIONS = 20
     PLANT = '#'
     NO_PLANT = '.'
 
     def __init__(self, initial, rules):
-        self.current = initial
-        initial_len = len(initial)
-        for i in range(1, NUM_GENERATIONS+1):
-            self.current[-i] = self.NO_PLANT
-            self.current[initial_len+i] = self.NO_PLANT
+        self.generation = 0
+        self.padding = self.NUM_GENERATIONS + 2
+        self.initial_length = len(initial)
+        self.current = initial + (['.'] * (self.padding * 2))
         self.rules = rules
 
     def __str__(self):
-        return '<({}, {}): {}>'.format(
-                   min(self.current.keys()),
-                   max(self.current.keys()),
-                   ''.join([i[1] for i in sorted(self.current.items())]))
+        return '<Gen {}: ({} - {}): {}>'.format(
+            self.generation,
+            -self.padding,
+            self.initial_length + self.padding,
+            ''.join(self.current[-self.padding:])
+                + ''.join(self.current[:-self.padding]),
+        )
 
-    def sum_of_plants(self):
-        return sum(k for k,v in self.current.items() if v == self.PLANT)
+    def plant_pot_number_total(self):
+        total = 0
+        for i in range(-self.padding, self.initial_length + self.padding):
+            if self.current[i] == self.PLANT:
+                total += i
+        return total
 
     def tick(self):
-        next_ = copy.deepcopy(self.current)
-        for number in list(self.current.keys()):
-            key = ''.join(self.current[number+i] for i in range(-2,3))
-            next_[number] = self.rules[key]
+        self.generation += 1
+        next_ = self.current.copy()
+        for i in range(-self.padding + 2,
+                       self.initial_length + self.padding - 2):
+            try:
+                pattern = ''.join(self.current[i+n] for n in range(-2,3))
+            except IndexError:
+                import ipdb; ipdb.set_trace()
+            next_[i] = self.rules.get(pattern, '.')
         self.current = next_
-        print(self)
 
 
 def main():
     args = parse_args()
-    initial, rules = parse_input(args.input)
-    system = System(initial, rules)
+    system = System(*parse_input(args))
     print(system)
-    for _ in range(NUM_GENERATIONS):
+    for _ in range(System.NUM_GENERATIONS):
         system.tick()
-    print('sum of plants:', system.sum_of_plants())
+        print(system)
+    print('plant pot number total', system.plant_pot_number_total())
     return 0
 
 
@@ -58,13 +63,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def parse_input(input_):
-    initial_str = input_.readline().strip().split(': ')[-1]
-    initial = defaultdict(lambda: System.NO_PLANT)
-    initial.update((int(n), p) for n,p in enumerate(initial_str))
-
-    rules = defaultdict(lambda: System.NO_PLANT)
-    for line in input_:
+def parse_input(args):
+    initial = list(args.input.readline().strip().split(': ')[-1])
+    rules = {}
+    for line in args.input:
         line = line.strip()
         if not line:
             continue
