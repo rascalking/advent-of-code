@@ -6,7 +6,7 @@ from pprint import pprint
 
 
 class System(object):
-    NUM_GENERATIONS = 50000000
+    NUM_GENERATIONS = 500
     PLANT = '#'
     NO_PLANT = '.'
 
@@ -16,6 +16,7 @@ class System(object):
         self.initial_length = len(initial)
         self.current = initial + (['.'] * (self.padding * 2))
         self.rules = rules
+        self.totals = {self.generation: self.plant_pot_number_total()}
 
     def __str__(self):
         return '<Gen {}: ({} - {}): {}>'.format(
@@ -41,16 +42,19 @@ class System(object):
             pattern = ''.join(self.current[i+n] for n in range(-2,3))
             next_[i] = self.rules.get(pattern, '.')
         self.current = next_
-        if self.generation % 1000000 == 0:
-            print('Generation', self.generation)
+        self.totals[self.generation] = self.plant_pot_number_total()
 
 
 def main():
     args = parse_args()
     system = System(*parse_input(args))
-    for _ in range(System.NUM_GENERATIONS):
+    for i in range(1,System.NUM_GENERATIONS+1):
         system.tick()
-    print('plant pot number total', system.plant_pot_number_total())
+        # running for 500 generations shows we hit a steady state of adding 88
+        # every round at some point
+        if system.totals[i] - system.totals[i-1] == 88:
+            break
+    print(system.totals[i] + ((50000000001 - i) * 88))
     return 0
 
 
