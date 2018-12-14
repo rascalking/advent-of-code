@@ -6,7 +6,7 @@ from pprint import pprint
 
 
 class System(object):
-    NUM_GENERATIONS = 500
+    NUM_GENERATIONS = 5000
     PLANT = '#'
     NO_PLANT = '.'
 
@@ -50,11 +50,11 @@ def main():
     system = System(*parse_input(args))
     for i in range(1,System.NUM_GENERATIONS+1):
         system.tick()
-        # running for 500 generations shows we hit a steady state of adding 88
-        # every round at some point
-        if system.totals[i] - system.totals[i-1] == 88:
-            break
-    print(system.totals[i] + ((50000000001 - i) * 88))
+    for i in range(System.NUM_GENERATIONS-100, System.NUM_GENERATIONS):
+        print(i, system.totals[i], system.totals[i] - system.totals[i-1])
+    print(System.NUM_GENERATIONS, system.totals[System.NUM_GENERATIONS])
+    print(system.totals[System.NUM_GENERATIONS] +
+            ((50000000000 - System.NUM_GENERATIONS) * 88))
     return 0
 
 
