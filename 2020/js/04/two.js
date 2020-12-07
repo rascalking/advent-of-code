@@ -32,10 +32,10 @@ function parsePassport(raw) {
 	return passport;
 }
 
-let hgtRe = /(?<num>\d+)(?<unit>\w+)/;
-let hclRe = /#[\da-f]{6}/;
+let hgtRe = /^(?<num>\d+)(?<unit>\w+)$/;
+let hclRe = /^#[\da-f]{6}$/;
 let eclValidValues = ['amb', 'blu', 'brn', 'gry', 'grn', 'hzl', 'oth'];
-let pidRe = /\d{9}/;
+let pidRe = /^\d{9}$/;
 function validatePassport(passport) {
 	for (let field of requiredFields) {
 		if (!passport[field]) {
@@ -111,5 +111,5 @@ fs.readFile(myArgs[0], 'utf8', (err, data) => {
 			    .map(x => parsePassport(x));
 	valid = passports.filter(validatePassport);
 	console.log(valid.length);
-	console.log('nominally valid', valid);
+	//console.log('nominally valid', valid);
 });
