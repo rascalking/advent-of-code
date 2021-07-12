@@ -23,9 +23,11 @@ fn main() -> std::io::Result<()> {
     
     for i in 0..numbers.len() {
         for j in (i+1)..numbers.len() {
-            if numbers[i] + numbers[j] == 2020 {
-                println!("{}", numbers[i] * numbers[j]);
-                return Ok(())
+            for k in (j+1)..numbers.len() {
+                if numbers[i] + numbers[j] + numbers[k] == 2020 {
+                    println!("{}", numbers[i] * numbers[j] * numbers[k]);
+                    return Ok(())
+                }
             }
         }
     }
