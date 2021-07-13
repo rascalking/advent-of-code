@@ -19,22 +19,16 @@ fn read_lines(filename: &str) -> Result<Vec<String>, std::io::Error> {
 fn is_password_valid(entry: &str) -> bool {
     lazy_static! {
         static ref RE: Regex = Regex::new(
-            r"(?P<first>\d+)-(?P<second>\d+) (?P<letter>[[:alpha:]]): (?P<password>[[:alpha:]]+)"
+            r"(?P<min>\d+)-(?P<max>\d+) (?P<letter>[[:alpha:]]): (?P<password>[[:alpha:]]+)"
         ).unwrap();
     }
     if let Some(caps) = RE.captures(entry) {
-        let first: usize = caps.name("first").unwrap().as_str().parse().unwrap();
-        let second: usize = caps.name("second").unwrap().as_str().parse().unwrap();
+        let min: usize = caps.name("min").unwrap().as_str().parse().unwrap();
+        let max: usize = caps.name("max").unwrap().as_str().parse().unwrap();
         let letter = caps.name("letter").unwrap().as_str().chars().next().unwrap();
-        let password_chars: Vec<char> = caps.name("password").unwrap().as_str().chars().collect();
-        let mut count = 0;
-        if password_chars[first-1] == letter {
-            count += 1;
-        }
-        if password_chars[second-1] == letter {
-            count += 1;
-        }
-        return count == 1;
+        let password = caps.name("password").unwrap().as_str();
+        let count = password.chars().filter(|c| c == &letter).count();
+        return min <= count && count <= max;
     }
     false
 }
