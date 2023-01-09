@@ -42,7 +42,6 @@ struct Coord {
 
 #[derive(Debug)]
 struct Grid {
-    start: Coord,
     end: Coord,
     heights: Vec<Vec<Height>>,
 }
@@ -52,10 +51,6 @@ impl FromStr for Grid {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut heights: Vec<Vec<Height>> = Vec::new();
-        let mut start = Coord {
-            x: usize::MAX,
-            y: usize::MAX,
-        };
         let mut end = Coord {
             x: usize::MAX,
             y: usize::MAX,
@@ -65,9 +60,6 @@ impl FromStr for Grid {
             for (x, c) in line.chars().enumerate() {
                 let height = Height::try_from(c)?;
                 match height {
-                    Height(0) => {
-                        start = Coord { x, y };
-                    }
                     Height(27) => {
                         end = Coord { x, y };
                     }
@@ -78,7 +70,6 @@ impl FromStr for Grid {
             heights.push(row);
         }
         Ok(Grid {
-            start,
             end,
             heights,
         })
@@ -141,16 +132,16 @@ impl Grid {
             open_set.remove(&current);
             g_score.entry(current).or_insert_with(|| usize::MAX);
             f_score.entry(current).or_insert_with(|| usize::MAX);
-            println!("considering {:?}, g_score {:?}, f_score {:?}", current, g_score[&current], f_score[&current]);
+            //println!("considering {:?}, g_score {:?}, f_score {:?}", current, g_score[&current], f_score[&current]);
             for neighbor in self.valid_neighbors(current) {
                 g_score.entry(neighbor).or_insert_with(|| usize::MAX);
                 let tmp_g_score = g_score[&current].saturating_add(1);
-                println!("\tneighbor {:?} current g_score: {:?}, new g_score: {:?}", neighbor, g_score[&neighbor], tmp_g_score);
+                //println!("\tneighbor {:?} current g_score: {:?}, new g_score: {:?}", neighbor, g_score[&neighbor], tmp_g_score);
                 if tmp_g_score < g_score[&neighbor] {
                     came_from.insert(neighbor, current);
                     g_score.insert(neighbor, tmp_g_score);
                     f_score.insert(neighbor, tmp_g_score + self.heuristic(neighbor, d));
-                    println!("\t\tnew g_score={:?}, f_score={:?}", tmp_g_score, f_score[&neighbor]);
+                    //println!("\t\tnew g_score={:?}, f_score={:?}", tmp_g_score, f_score[&neighbor]);
                     if !open_set.contains(&neighbor) {
                         open_set.insert(neighbor);
 
@@ -158,14 +149,41 @@ impl Grid {
                 }
             }
         }
-        dbg!(came_from);
-        dbg!(g_score);
-        dbg!(f_score);
+        //dbg!(came_from);
+        //dbg!(g_score);
+        //dbg!(f_score);
         vec![]
     }
 
     fn solve(&self) -> Vec<Coord> {
-        self.path(self.start, self.end)
+        let mut shortest: Option<Vec<Coord>> = None;
+
+        for y in 0..self.heights.len() {
+            for x in 0..self.heights[0].len() {
+                let coord = Coord{x, y};
+                if self.height_at(coord).0 == 1 {
+                    let path = self.path(coord, self.end);
+                    match shortest {
+                        Some(short) => {
+                            if path.is_empty() {
+                                shortest = Some(short);
+                            } else {
+                                if path.len() < short.len() {
+                                    println!("{:?} -> {:?} = {}", path[0], self.end, path.len());
+                                    shortest = Some(path);
+                                } else {
+                                    shortest = Some(short);
+                                }
+                            }
+                        },
+                        None => {
+                            shortest = Some(path);
+                        }
+                    }
+                }
+            }
+        }
+        shortest.unwrap()
     }
 
     fn valid_neighbors(&self, c: Coord) -> Vec<Coord> {
@@ -193,6 +211,6 @@ fn main() -> std::io::Result<()> {
     let contents = read_to_string(file).expect("unable to read from input file");
     let grid = Grid::from_str(&contents).unwrap();
     let path: Vec<Coord> = grid.solve();
-    println!("{:?} -> {:?} = {}", grid.start, grid.end, path.len());
+    println!("SHORTEST {:?} -> {:?} = {}", path[0], grid.end, path.len());
     Ok(())
 }
